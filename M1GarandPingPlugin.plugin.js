@@ -1,48 +1,57 @@
 /**
  * @name M1GarandPingPlugin
- * @version 1.0.0
- * @description Plays a custom M1 Garand ping sound after every 7th mention.
- * @author Your Name
- * @updateUrl https://example.com/M1GarandPingPlugin.plugin.js
+ * @version 1.0.1
+ * @description Replaces every 8th message sound with a custom sound.
+ * @author Snoet_
+ * @updateUrl https://github.com/Sno3t/BetterDiscord-M1-Ping
  */
 
-module.exports = class M1GarandPingPlugin {
-    constructor() {
-        this.pingCount = 0;
-    }
 
-    // Called when the plugin is loaded
-    start() {
-        BdApi.showToast("M1GarandPingPlugin started!", {type: "success"});
-        this.attachPingListener();
-    }
+module.exports = (() => {
+    const config = {
+        info: {
+            name: "CustomPingSound",
+            version: "1.0.0",
+            description: "Replaces every 8th message sound with a custom sound."
+        }
+    };
 
-    // Called when the plugin is stopped
-    stop() {
-        BdApi.showToast("M1GarandPingPlugin stopped!", {type: "error"});
-        this.detachPingListener();
-    }
+    class CustomPingSound {
+        constructor() { 
+            this.messageCount = 0;
+        }
 
-    attachPingListener() {
-        // This is a placeholder for attaching a listener to message events
-        // You'll need to implement this based on Discord's DOM structure and events
-    }
+        start() {
+            BdApi.showToast("CustomPingSound started!", {type: "success"});
+            this.attachMessageListener();
+        }
 
-    detachPingListener() {
-        // Placeholder for detaching the listener
-    }
+        stop() {
+            BdApi.showToast("CustomPingSound stopped!", {type: "error"});
+            this.detachMessageListener();
+        }
 
-    onPing() {
-        this.pingCount++;
-        if (this.pingCount % 7 === 0) {
-            this.playM1GarandPing();
+        attachMessageListener() {
+            this.messageListener = (e) => {
+                this.messageCount++;
+                if (this.messageCount % 8 === 0) {
+                    this.playCustomSound();
+                }
+            };
+
+            // Attach your listener to the Discord message event
+            BdApi.findModuleByProps("dispatch").subscribe("MESSAGE_CREATE", this.messageListener);
+        }
+
+        detachMessageListener() {
+            BdApi.findModuleByProps("dispatch").unsubscribe("MESSAGE_CREATE", this.messageListener);
+        }
+
+        playCustomSound() {
+            const audio = new Audio('https://github.com/Sno3t/BetterDiscord-M1-Ping/raw/main/sound/m1_garand_ping.mp3');
+            audio.play().catch(e => console.error("Failed to play sound:", e));
         }
     }
 
-    playM1GarandPing() {
-        // Use the BdApi to inject a custom sound file
-        // This is a placeholder, you'll need to host your sound file somewhere accessible
-        const audio = new Audio('https://example.com/m1_garand_ping.mp3');
-        audio.play().then(() => BdApi.showToast("M1 Garand ping played!", {type: "info"}));
-    }
-};
+    return CustomPingSound;
+})();
